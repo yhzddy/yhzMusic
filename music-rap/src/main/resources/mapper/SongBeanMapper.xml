@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rap.mapper.SongBeanMapper">
+  <resultMap id="BaseResultMap" type="com.rap.bean.SongBean">
+    <id column="s_id" jdbcType="INTEGER" property="sId" />
+    <result column="s_name" jdbcType="VARCHAR" property="sName" />
+    <result column="s_intro" jdbcType="VARCHAR" property="sIntro" />
+    <result column="s_issuetime" jdbcType="DATE" property="sIssuetime" />
+    <result column="s_url" jdbcType="VARCHAR" property="sUrl" />
+    <result column="s_playtime" jdbcType="VARCHAR" property="sPlaytime" />
+    <result column="s_download" jdbcType="VARCHAR" property="sDownload" />
+    <result column="ser_name" jdbcType="VARCHAR" property="serName" />
+    <result column="albm_name" jdbcType="VARCHAR" property="albmName" />  
+    <result column="c_id" jdbcType="INTEGER" property="cId" />
+    <result column="s_imgurl" jdbcType="VARCHAR" property="sImgUrl"/>
+  </resultMap>
+  <resultMap id="WithCatResultMap" type="com.rap.bean.SongBean">
+  	<id column="s_id" jdbcType="INTEGER" property="sId" />
+    <result column="s_name" jdbcType="VARCHAR" property="sName" />
+    <result column="s_intro" jdbcType="VARCHAR" property="sIntro" />
+    <result column="s_issuetime" jdbcType="DATE" property="sIssuetime" />
+    <result column="s_url" jdbcType="VARCHAR" property="sUrl" />
+    <result column="s_playtime" jdbcType="VARCHAR" property="sPlaytime" />
+    <result column="s_download" jdbcType="VARCHAR" property="sDownload" />
+    <result column="ser_name" jdbcType="VARCHAR" property="serName" />
+    <result column="albm_name" jdbcType="VARCHAR" property="albmName" />
+    <result column="c_id" jdbcType="INTEGER" property="cId" />
+    <result column="s_imgurl" jdbcType="VARCHAR" property="sImgUrl"/>
+    <association javaType="com.rap.bean.CategoryBean" property="categoryBean">
+   	 	<id column="cat_id" property="catId" />
+    	<result column="cat_name" property="catName" />
+    </association>
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    s_id, s_name, s_intro, s_issuetime, s_url, s_playtime, s_download, ser_name, albm_name, 
+    c_id,s_imgurl
+  </sql>
+  <sql id="WithCat_Column_List">
+    s_id, s_name, s_intro, s_issuetime, s_url, s_playtime, s_download, ser_name, albm_name, 
+    c_id,s_imgurl,cat_id,cat_name
+  </sql>
+  
+<!-- 专辑查询 -->
+<select id="selectByExampleWithAblm" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    FROM tb_song 
+	group by albm_name
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    </select>
+
+<!-- 模糊查询 -->
+	<select id="selectByExampleWithLike" resultMap="WithCatResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	WHERE
+	 <if test="sName !=null || sName !=''">
+      <bind name="s_name" value="'%' + sName + '%'"/>
+      sName like #{s_name}
+    </if>
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    </select>
+
+<!-- 查询排行榜1 -->
+    <select id="selectByExampleWithRankOne" resultMap="WithCatResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	LEFT JOIN tb_category ON c_id=cat_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by (s_playtime+0) DESC
+    </if>
+    </select>
+<!-- 查询排行榜2 -->
+    <select id="selectByExampleWithRankTwo" resultMap="WithCatResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	LEFT JOIN tb_category ON c_id=cat_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by (s_download+0) DESC
+    </if>
+    </select>
+<!-- 查询排行榜3 -->
+    <select id="selectByExampleWithRankThree" resultMap="WithCatResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	LEFT JOIN tb_category ON c_id=cat_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    </select>
+  <!-- 查询歌曲同时带分类 -->
+    <select id="selectByExampleWithCat" resultMap="WithCatResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	LEFT JOIN tb_category ON c_id=cat_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    </select>
+    <select id="selectByPrimaryKeyWithCat" resultMap="WithCatResultMap">
+    select 
+    <include refid="WithCat_Column_List" />
+    FROM tb_song 
+	LEFT JOIN tb_category ON c_id=cat_id
+    where s_id = #{sId,jdbcType=INTEGER}
+    </select>
+  <!-- 查询歌曲不带分类 -->
+  	<select id="selectByExample" parameterType="com.rap.bean.SongBeanExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from tb_song
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+ 	 </select>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from tb_song
+    where s_id = #{sId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from tb_song
+    where s_id = #{sId,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.rap.bean.SongBeanExample">
+    delete from tb_song
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.rap.bean.SongBean">
+    insert into tb_song (s_id, s_name, s_intro, 
+      s_issuetime, s_url, s_playtime, 
+      s_download, ser_name, albm_name, 
+      c_id,s_imgurl)
+    values (#{sId,jdbcType=INTEGER}, #{sName,jdbcType=VARCHAR}, #{sIntro,jdbcType=VARCHAR}, 
+      #{sIssuetime,jdbcType=DATE}, #{sUrl,jdbcType=VARCHAR}, #{sPlaytime,jdbcType=VARCHAR}, 
+      #{sDownload,jdbcType=VARCHAR}, #{serName,jdbcType=VARCHAR}, #{albmName,jdbcType=VARCHAR}, 
+      #{cId,jdbcType=INTEGER}, #{sImgUrl,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.rap.bean.SongBean">
+    insert into tb_song
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sId != null">
+        s_id,
+      </if>
+      <if test="sName != null">
+        s_name,
+      </if>
+      <if test="sIntro != null">
+        s_intro,
+      </if>
+      <if test="sIssuetime != null">
+        s_issuetime,
+      </if>
+      <if test="sUrl != null">
+        s_url,
+      </if>
+      <if test="sPlaytime != null">
+        s_playtime,
+      </if>
+      <if test="sDownload != null">
+        s_download,
+      </if>
+      <if test="serName != null">
+        ser_name,
+      </if>
+      <if test="albmName != null">
+        albm_name,
+      </if>
+      <if test="cId != null">
+        c_id,
+      </if>
+      <if test="sImgUrl != null">
+        s_imgurl,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sId != null">
+        #{sId,jdbcType=INTEGER},
+      </if>
+      <if test="sName != null">
+        #{sName,jdbcType=VARCHAR},
+      </if>
+      <if test="sIntro != null">
+        #{sIntro,jdbcType=VARCHAR},
+      </if>
+      <if test="sIssuetime != null">
+        #{sIssuetime,jdbcType=DATE},
+      </if>
+      <if test="sUrl != null">
+        #{sUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="sPlaytime != null">
+        #{sPlaytime,jdbcType=VARCHAR},
+      </if>
+      <if test="sDownload != null">
+        #{sDownload,jdbcType=VARCHAR},
+      </if>
+      <if test="serName != null">
+        #{serName,jdbcType=VARCHAR},
+      </if>
+      <if test="albmName != null">
+        #{albmName,jdbcType=VARCHAR},
+      </if>
+      <if test="cId != null">
+        #{cId,jdbcType=INTEGER},
+      </if>
+      <if test="sImgUrl != null">
+        #{sImgUrl,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.rap.bean.SongBeanExample" resultType="java.lang.Long">
+    select count(*) from tb_song
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update tb_song
+    <set>
+      <if test="record.sId != null">
+        s_id = #{record.sId,jdbcType=INTEGER},
+      </if>
+      <if test="record.sName != null">
+        s_name = #{record.sName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sIntro != null">
+        s_intro = #{record.sIntro,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sIssuetime != null">
+        s_issuetime = #{record.sIssuetime,jdbcType=DATE},
+      </if>
+      <if test="record.sUrl != null">
+        s_url = #{record.sUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sPlaytime != null">
+        s_playtime = #{record.sPlaytime,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sDownload != null">
+        s_download = #{record.sDownload,jdbcType=VARCHAR},
+      </if>
+      <if test="record.serName != null">
+        ser_name = #{record.serName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.albmName != null">
+        albm_name = #{record.albmName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.cId != null">
+        c_id = #{record.cId,jdbcType=INTEGER},
+      </if>
+      <if test="record.sImgUrl != null">
+        s_imgurl = #{record.sImgUrl,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update tb_song
+    set s_id = #{record.sId,jdbcType=INTEGER},
+      s_name = #{record.sName,jdbcType=VARCHAR},
+      s_intro = #{record.sIntro,jdbcType=VARCHAR},
+      s_issuetime = #{record.sIssuetime,jdbcType=DATE},
+      s_url = #{record.sUrl,jdbcType=VARCHAR},
+      s_playtime = #{record.sPlaytime,jdbcType=VARCHAR},
+      s_download = #{record.sDownload,jdbcType=VARCHAR},
+      ser_name = #{record.serName,jdbcType=VARCHAR},
+      albm_name = #{record.albmName,jdbcType=VARCHAR},
+      c_id = #{record.cId,jdbcType=INTEGER},
+      s_imgurl = #{record.sImgUrl,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.rap.bean.SongBean">
+    update tb_song
+    <set>
+      <if test="sName != null">
+        s_name = #{sName,jdbcType=VARCHAR},
+      </if>
+      <if test="sIntro != null">
+        s_intro = #{sIntro,jdbcType=VARCHAR},
+      </if>
+      <if test="sIssuetime != null">
+        s_issuetime = #{sIssuetime,jdbcType=DATE},
+      </if>
+      <if test="sUrl != null">
+        s_url = #{sUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="sPlaytime != null">
+        s_playtime = #{sPlaytime,jdbcType=VARCHAR},
+      </if>
+      <if test="sDownload != null">
+        s_download = #{sDownload,jdbcType=VARCHAR},
+      </if>
+      <if test="serName != null">
+        ser_name = #{serName,jdbcType=VARCHAR},
+      </if>
+      <if test="albmName != null">
+        albm_name = #{albmName,jdbcType=VARCHAR},
+      </if>
+      <if test="cId != null">
+        c_id = #{cId,jdbcType=INTEGER},
+      </if>
+      <if test="sImgUrl != null">
+        s_imgurl = #{sImgUrl,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where s_id = #{sId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.rap.bean.SongBean">
+    update tb_song
+    set s_name = #{sName,jdbcType=VARCHAR},
+      s_intro = #{sIntro,jdbcType=VARCHAR},
+      s_issuetime = #{sIssuetime,jdbcType=DATE},
+      s_url = #{sUrl,jdbcType=VARCHAR},
+      s_playtime = #{sPlaytime,jdbcType=VARCHAR},
+      s_download = #{sDownload,jdbcType=VARCHAR},
+      ser_name = #{serName,jdbcType=VARCHAR},
+      albm_name = #{albmName,jdbcType=VARCHAR},
+      c_id = #{cId,jdbcType=INTEGER},
+      s_imgurl = #{sImgUrl,jdbcType=VARCHAR}
+    where s_id = #{sId,jdbcType=INTEGER}
+  </update>
+</mapper>
